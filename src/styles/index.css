@@ -9,3 +9,12 @@
     import 'relative/path/to/stylesheet.scss';
 
 */
+
+.icono-eliminar {
+  display: none;
+  cursor: pointer;
+}
+
+.tarea-item:hover .icono-eliminar {
+  display: block;
+}
