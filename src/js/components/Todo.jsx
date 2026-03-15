@@ -1,19 +1,76 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 function Todo() {
-  //Estados
-  const [tarea, setTarea] = useState("");
-  const [listaTareas, setListaTareas] = useState([]);
-  const manejarEnter = (e) => {
-    if (e.key === "Enter" && tarea.trim() !== "") {
-      setListaTareas([...listaTareas, tarea]);
-      setTarea("");
+  const USERNAME = "mauricio";
+  const BASE_URL = "https://playground.4geeks.com/todo";
+
+  //tareas como objetos por la base de datos
+  const [tarea, setTarea] = useState({
+    label: "",
+    is_done: false,
+  });
+
+  const [listaTareas, setListaTareas] = useState([]); //manejo de la lista
+
+  //metodo post que crea tarea en el servidor
+  const manejarEnter = async (e) => {
+    if (e.key === "Enter" && tarea.label.trim() !== "") {
+      try {
+        // Corrección de la URL
+        const response = await fetch(`${BASE_URL}/todos/${USERNAME}`, {
+          method: "POST",
+          body: JSON.stringify(tarea),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          getAllTask();
+          setTarea({ label: "", is_done: false });
+        }
+      } catch (error) {
+        console.log("Error creando tarea", error);
+      }
     }
   };
 
-  const borrarTarea = (indexABorrar) => {
-    const nuevaLista = listaTareas.filter((_, index) => index !== indexABorrar);
-    setListaTareas(nuevaLista);
+  const getAllTask = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/users/${USERNAME}`);
+      if (!response.ok) {
+        console.log("Error de conexión o usuario no existe");
+        return;
+      }
+      // Convertimos la respuesta a JSON
+      const data = await response.json();
+      // La API devuelve un objeto que contiene un arreglo llamado "todos"
+      setListaTareas(data.todos);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getAllTask();
+  }, []);
+
+  const borrarTarea = async (idABorrar) => {
+    try {
+      const response = await fetch(
+        // Apuntamos al ID de la tarea
+        `${BASE_URL}/todos/${idABorrar}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (response.ok) {
+        getAllTask();
+      }
+    } catch (error) {
+      console.log("Error borrando tarea:", error);
+    }
   };
 
   return (
@@ -35,8 +92,8 @@ function Todo() {
               type="text"
               className="form-control border-0 fs-4 py-3 px-4"
               placeholder="What needs to be done?"
-              value={tarea}
-              onChange={(e) => setTarea(e.target.value)}
+              value={tarea.label}
+              onChange={(e) => setTarea({ ...tarea, label: e.target.value })}
               onKeyDown={manejarEnter}
               style={{ boxShadow: "none", outline: "none" }}
             />
@@ -51,20 +108,24 @@ function Todo() {
                 No hay tareas, añadir tareas
               </li>
             ) : (
-              listaTareas.map((item, index) => (
-                <li
-                  key={index}
-                  className="list-group-item d-flex justify-content-between align-items-center fs-5 py-3 px-4 tarea-item"
-                >
-                  {item}
-                  <span
-                    className="text-danger icono-eliminar"
-                    onClick={() => borrarTarea(index)}
+              listaTareas.map(
+                (
+                  item, // Ya no necesitamos el index
+                ) => (
+                  <li
+                    key={item.id} // Usamos el ID como key
+                    className="list-group-item d-flex justify-content-between align-items-center fs-5 py-3 px-4 tarea-item"
                   >
-                    ✖
-                  </span>
-                </li>
-              ))
+                    {item.label} {/* DIBUJAMOS SOLO EL LABEL */}
+                    <span
+                      className="text-danger icono-eliminar"
+                      onClick={() => borrarTarea(item.id)} // PASAMOS EL ID
+                    >
+                      ✖
+                    </span>
+                  </li>
+                ),
+              )
             )}
           </ul>
 
