@@ -16,7 +16,6 @@ function Todo() {
   const manejarEnter = async (e) => {
     if (e.key === "Enter" && tarea.label.trim() !== "") {
       try {
-        // Corrección de la URL
         const response = await fetch(`${BASE_URL}/todos/${USERNAME}`, {
           method: "POST",
           body: JSON.stringify(tarea),
@@ -44,7 +43,7 @@ function Todo() {
       }
       // Convertimos la respuesta a JSON
       const data = await response.json();
-      // La API devuelve un objeto que contiene un arreglo llamado "todos"
+
       setListaTareas(data.todos);
     } catch (error) {
       console.log(error);
@@ -57,13 +56,9 @@ function Todo() {
 
   const borrarTarea = async (idABorrar) => {
     try {
-      const response = await fetch(
-        // Apuntamos al ID de la tarea
-        `${BASE_URL}/todos/${idABorrar}`,
-        {
-          method: "DELETE",
-        },
-      );
+      const response = await fetch(`${BASE_URL}/todos/${idABorrar}`, {
+        method: "DELETE",
+      });
 
       if (response.ok) {
         getAllTask();
@@ -108,24 +103,20 @@ function Todo() {
                 No hay tareas, añadir tareas
               </li>
             ) : (
-              listaTareas.map(
-                (
-                  item, // Ya no necesitamos el index
-                ) => (
-                  <li
-                    key={item.id} // Usamos el ID como key
-                    className="list-group-item d-flex justify-content-between align-items-center fs-5 py-3 px-4 tarea-item"
+              listaTareas.map((item) => (
+                <li
+                  key={item.id}
+                  className="list-group-item d-flex justify-content-between align-items-center fs-5 py-3 px-4 tarea-item"
+                >
+                  {item.label}
+                  <span
+                    className="text-danger icono-eliminar"
+                    onClick={() => borrarTarea(item.id)}
                   >
-                    {item.label} {/* DIBUJAMOS SOLO EL LABEL */}
-                    <span
-                      className="text-danger icono-eliminar"
-                      onClick={() => borrarTarea(item.id)} // PASAMOS EL ID
-                    >
-                      ✖
-                    </span>
-                  </li>
-                ),
-              )
+                    ✖
+                  </span>
+                </li>
+              ))
             )}
           </ul>
 
